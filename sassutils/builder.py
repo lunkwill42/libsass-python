@@ -26,8 +26,10 @@ SUFFIXES = frozenset(('sass', 'scss'))
 SUFFIX_PATTERN = re.compile('[.](' + '|'.join(map(re.escape, SUFFIXES)) + ')$')
 
 
-def build_directory(sass_path, css_path, output_style='nested',
-                    _root_sass=None, _root_css=None):
+def build_directory(
+    sass_path, css_path, output_style='nested',
+    _root_sass=None, _root_css=None,
+):
     """Compiles all Sass/SCSS files in ``path`` to CSS.
 
     :param sass_path: the path of the directory which contains source files
@@ -59,9 +61,11 @@ def build_directory(sass_path, css_path, output_style='nested',
                 # Do not compile if it's partial
                 continue
             css_fullname = os.path.join(css_path, name) + '.css'
-            css = compile(filename=sass_fullname,
-                          output_style=output_style,
-                          include_paths=[_root_sass])
+            css = compile(
+                filename=sass_fullname,
+                output_style=output_style,
+                include_paths=[_root_sass],
+            )
             with io.open(
                 css_fullname, 'w', encoding='utf-8', newline='',
             ) as css_file:
@@ -70,10 +74,12 @@ def build_directory(sass_path, css_path, output_style='nested',
                 os.path.relpath(css_fullname, _root_css)
         elif os.path.isdir(sass_fullname):
             css_fullname = os.path.join(css_path, name)
-            subresult = build_directory(sass_fullname, css_fullname,
-                                        output_style=output_style,
-                                        _root_sass=_root_sass,
-                                        _root_css=_root_css)
+            subresult = build_directory(
+                sass_fullname, css_fullname,
+                output_style=output_style,
+                _root_sass=_root_sass,
+                _root_css=_root_css,
+            )
             result.update(subresult)
     return result
 
@@ -116,7 +122,7 @@ class Manifest(object):
                 raise TypeError(
                     'manifest values must be a sassutils.builder.Manifest, '
                     'a pair of (sass_path, css_path), or a string of '
-                    'sass_path, not ' + repr(manifest)
+                    'sass_path, not ' + repr(manifest),
                 )
             manifests[package_name] = manifest
         return manifests
@@ -201,10 +207,12 @@ class Manifest(object):
         css_path = os.path.join(package_dir, self.css_path)
         css_files = build_directory(
             sass_path, css_path,
-            output_style=output_style
+            output_style=output_style,
         ).values()
-        return frozenset(os.path.join(self.css_path, filename)
-                         for filename in css_files)
+        return frozenset(
+            os.path.join(self.css_path, filename)
+            for filename in css_files
+        )
 
     def build_one(self, package_dir, filename, source_map=False):
         """Builds one Sass/SCSS file.
@@ -226,7 +234,8 @@ class Manifest(object):
 
         """
         sass_filename, css_filename = self.resolve_filename(
-            package_dir, filename)
+            package_dir, filename,
+        )
         root_path = os.path.join(package_dir, self.sass_path)
         css_path = os.path.join(package_dir, self.css_path, css_filename)
         if source_map:
@@ -234,7 +243,7 @@ class Manifest(object):
             css, source_map = compile(
                 filename=sass_filename,
                 include_paths=[root_path],
-                source_map_filename=source_map_path  # FIXME
+                source_map_filename=source_map_path,  # FIXME
             )
         else:
             css = compile(filename=sass_filename, include_paths=[root_path])
